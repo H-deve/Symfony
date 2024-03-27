@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "leaflet": "^1.9.4",
+    "leaflet.gridlayer.googlemutant": "^0.14.0"
+  }
+}

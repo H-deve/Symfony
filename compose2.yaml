@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+    database:
+        image: mariadb:${MARIADB_VERSION:-11.2.2}
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+            # You should definitely change the password in production
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-!ChangeMe!}
+            MYSQL_USER: ${MYSQL_USER:-app}
+        volumes:
+        # - database_data:/var/lib/mysql:rw
+        # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+        - ./docker/db/data:/var/lib/mysql:rw
+        ports:
+            # To allow the host machine to access the ports below, modify the lines below.
+            # For example, to allow the host to connect to port 3306 on the container, you would change
+            # "3306" to "3306:3306". Where the first port is exposed to the host and the second is the container port.
+            # See https://docs.docker.com/compose/compose-file/compose-file-v3/#ports for more information.
+            - '3306'
+
+    php:
+        build:
+            context: .
+            target: frankenphp_prod
+        environment:
+            APP_SECRET: ${APP_SECRET}
+            MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+            MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}

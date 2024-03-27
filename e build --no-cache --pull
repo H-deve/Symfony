@@ -1,0 +1,182 @@
+[1mdiff --git a/.env b/.env[m
+[1mindex 06f497a..5559f7f 100644[m
+[1m--- a/.env[m
+[1m+++ b/.env[m
+[36m@@ -16,7 +16,7 @@[m
+ [m
+ ###> symfony/framework-bundle ###[m
+ APP_ENV=dev[m
+[31m-APP_SECRET=cf633637b6df3cf37d3990cd3c57a6da[m
+[32m+[m[32mAPP_SECRET=ee2dcf3b9d98461354c71b44ba796b3c[m
+ ###< symfony/framework-bundle ###[m
+ [m
+ ###> doctrine/doctrine-bundle ###[m
+[36m@@ -29,13 +29,13 @@[m [mAPP_SECRET=cf633637b6df3cf37d3990cd3c57a6da[m
+ DATABASE_URL="postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8"[m
+ ###< doctrine/doctrine-bundle ###[m
+ [m
+[32m+[m[32m###> symfony/mailer ###[m
+[32m+[m[32m# MAILER_DSN=null://null[m
+[32m+[m[32m###< symfony/mailer ###[m
+[32m+[m
+ ###> symfony/messenger ###[m
+ # Choose one of the transports below[m
+ # MESSENGER_TRANSPORT_DSN=amqp://guest:guest@localhost:5672/%2f/messages[m
+ # MESSENGER_TRANSPORT_DSN=redis://localhost:6379/messages[m
+ MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0[m
+ ###< symfony/messenger ###[m
+[31m-[m
+[31m-###> symfony/mailer ###[m
+[31m-# MAILER_DSN=null://null[m
+[31m-###< symfony/mailer ###[m
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 4daae38..fe539cc 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -9,6 +9,11 @@[m
+ /vendor/[m
+ ###< symfony/framework-bundle ###[m
+ [m
+[32m+[m[32m###> symfony/asset-mapper ###[m
+[32m+[m[32m/public/assets/[m
+[32m+[m[32m/assets/vendor/[m
+[32m+[m[32m###< symfony/asset-mapper ###[m
+[32m+[m
+ ###> phpunit/phpunit ###[m
+ /phpunit.xml[m
+ .phpunit.result.cache[m
+[36m@@ -18,8 +23,3 @@[m
+ .phpunit.result.cache[m
+ /phpunit.xml[m
+ ###< symfony/phpunit-bridge ###[m
+[31m-[m
+[31m-###> symfony/asset-mapper ###[m
+[31m-/public/assets/[m
+[31m-/assets/vendor/[m
+[31m-###< symfony/asset-mapper ###[m
+[1mdiff --git a/compose.override.yaml b/compose.override.yaml[m
+[1mindex e69de29..4ddb3ff 100644[m
+[1m--- a/compose.override.yaml[m
+[1m+++ b/compose.override.yaml[m
+[36m@@ -0,0 +1,19 @@[m
+[32m+[m[32mversion: '3'[m
+[32m+[m
+[32m+[m[32mservices:[m
+[32m+[m[32m###> doctrine/doctrine-bundle ###[m
+[32m+[m[32m  database:[m
+[32m+[m[32m    ports:[m
+[32m+[m[32m      - "5432"[m
+[32m+[m[32m###< doctrine/doctrine-bundle ###[m
+[32m+[m
+[32m+[m[32m###> symfony/mailer ###[m
+[32m+[m[32m  mailer:[m
+[32m+[m[32m    image: axllent/mailpit[m
+[32m+[m[32m    ports:[m
+[32m+[m[32m      - "1025"[m
+[32m+[m[32m      - "8025"[m
+[32m+[m[32m    environment:[m
+[32m+[m[32m      MP_SMTP_AUTH_ACCEPT_ANY: 1[m
+[32m+[m[32m      MP_SMTP_AUTH_ALLOW_INSECURE: 1[m
+[32m+[m[32m###< symfony/mailer ###[m
+[1mdiff --git a/compose.yaml b/compose.yaml[m
+[1mindex 1abf6c6..33cb767 100644[m
+[1m--- a/compose.yaml[m
+[1m+++ b/compose.yaml[m
+[36m@@ -1,6 +1,18 @@[m
+[31m-version: '3'[m
+[31m-[m
+[32m+[m[32mversion: '3.7'[m
+ services:[m
+[32m+[m[32m    database:[m
+[32m+[m[32m        image: 'postgres:alpine'[m
+[32m+[m[32m        environment:[m
+[32m+[m[32m            POSTGRES_PASSWORD: main[m
+[32m+[m[32m            POSTGRES_USER: main[m
+[32m+[m[32m            POSTGRES_DB: main[m
+[32m+[m[32m        ports:[m
+[32m+[m[32m            # To allow the host machine to access the ports below, modify the lines below.[m
+[32m+[m[32m            # For example, to allow the host to connect to port 3306 on the container, you would change[m
+[32m+[m[32m            # "3306" to "3306:3306". Where the first port is exposed to the host and the second is the container port.[m
+[32m+[m[32m            # See https://docs.docker.com/compose/compose-file/compose-file-v3/#ports for more information.[m
+[32m+[m[32m            - '5432'[m
+[32m+[m
+ ###> doctrine/doctrine-bundle ###[m
+   database:[m
+     image: postgres:${POSTGRES_VERSION:-16}-alpine[m
+[1mdiff --git a/composer.json b/composer.json[m
+[1mindex 13072e0..4dcb8b0 100644[m
+[1m--- a/composer.json[m
+[1m+++ b/composer.json[m
+[36m@@ -91,7 +91,8 @@[m
+     "extra": {[m
+         "symfony": {[m
+             "allow-contrib": false,[m
+[31m-            "require": "6.4.*"[m
+[32m+[m[32m            "require": "6.4.*",[m
+[32m+[m[32m            "docker": true[m
+         }[m
+     },[m
+     "require-dev": {[m
+[36m@@ -99,7 +100,7 @@[m
+         "symfony/browser-kit": "6.4.*",[m
+         "symfony/css-selector": "6.4.*",[m
+         "symfony/debug-bundle": "6.4.*",[m
+[31m-        "symfony/maker-bundle": "^1.0",[m
+[32m+[m[32m        "symfony/maker-bundle": "^1.54",[m
+         "symfony/phpunit-bridge": "^7.0",[m
+         "symfony/stopwatch": "6.4.*",[m
+         "symfony/web-profiler-bundle": "6.4.*"[m
+[1mdiff --git a/composer.lock b/composer.lock[m
+[1mindex b9d9f96..c524082 100644[m
+[1m--- a/composer.lock[m
+[1m+++ b/composer.lock[m
+[36m@@ -4,7 +4,7 @@[m
+         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",[m
+         "This file is @generated automatically"[m
+     ],[m
+[31m-    "content-hash": "39741d4936eef67bcd7d9f5224a11459",[m
+[32m+[m[32m    "content-hash": "d79ec90039f797661f90b01feda75b43",[m
+     "packages": [[m
+         {[m
+             "name": "composer/semver",[m
+[1mdiff --git a/config/packages/messenger.yaml b/config/packages/messenger.yaml[m
+[1mindex 587083a..672b6c4 100644[m
+[1m--- a/config/packages/messenger.yaml[m
+[1m+++ b/config/packages/messenger.yaml[m
+[36m@@ -1,24 +1,22 @@[m
+ framework:[m
+     messenger:[m
+[31m-        failure_transport: failed[m
+[32m+[m[32m        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.[m
+[32m+[m[32m        # failure_transport: failed[m
+ [m
+         transports:[m
+             # https://symfony.com/doc/current/messenger.html#transport-configuration[m
+[31m-            async:[m
+[31m-                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'[m
+[31m-                options:[m
+[31m-                    use_notify: true[m
+[31m-                    check_delayed_interval: 60000[m
+[31m-                retry_strategy:[m
+[31m-                    max_retries: 3[m
+[31m-                    multiplier: 2[m
+[31m-            failed: 'doctrine://default?queue_name=failed'[m
+[32m+[m[32m            # async: '%env(MESSENGER_TRANSPORT_DSN)%'[m
+[32m+[m[32m            # failed: 'doctrine://default?queue_name=failed'[m
+             # sync: 'sync://'[m
+ [m
+         routing:[m
+[31m-            Symfony\Component\Mailer\Messenger\SendEmailMessage: async[m
+[31m-            Symfony\Component\Notifier\Message\ChatMessage: async[m
+[31m-            Symfony\Component\Notifier\Message\SmsMessage: async[m
+[31m-[m
+             # Route your messages to the transports[m
+             # 'App\Message\YourMessage': async[m
+[32m+[m
+[32m+[m[32m# when@test:[m
+[32m+[m[32m#    framework:[m
+[32m+[m[32m#        messenger:[m
+[32m+[m[32m#            transports:[m
+[32m+[m[32m#                # replace with your transport name here (e.g., my_transport: 'in-memory://')[m
+[32m+[m[32m#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test[m
+[32m+[m[32m#                async: 'in-memory://'[m

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 400px; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([0, 0], 2); // Default center and zoom level
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var geojson = {{ geojson|raw }};
+
+    // Define custom icon
+    var customIcon = L.icon({
+        iconUrl: '{{ asset("/images/LaBonApp.png") }}', 
+        iconSize: [32, 32], // Size of the icon
+        iconAnchor: [16, 32], // Anchor point of the icon
+        popupAnchor: [0, -32] // Anchor point for the popup relative to the icon
+    });
+
+    var markers = L.geoJSON(geojson, {
+        pointToLayer: function (feature, latlng) {
+            // Define popup content
+            var popupContent = '<h3>' + feature.properties.title + '</h3>' +
+                               '<p>'+feature.properties.street+'</p>'+
+                               '<p>' + feature.properties.city +'-'+ feature.properties.code_postal +'</p>'+
+                               '<p>' + feature.properties.description + '</p>';
+
+            // Check if website exists and is not empty
+            if (feature.properties.website && feature.properties.website.trim() !== '') {
+                // Append website link to popup content
+                popupContent += '<p><a href="' + feature.properties.website + '" target="_blank">Accéder au site Web</a></p>';
+            }
+
+            // Create marker with custom icon and bind popup
+            return L.marker(latlng, { icon: customIcon }).bindPopup(popupContent);
+        }
+    }).addTo(map);
+
+    // Get bounds of all markers and zoom to fit
+    map.fitBounds(markers.getBounds());
+</script>
+
+
+
+
+</body>
+</html>
